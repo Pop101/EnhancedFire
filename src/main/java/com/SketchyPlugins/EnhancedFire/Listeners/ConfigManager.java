@@ -105,6 +105,7 @@ public class ConfigManager {
 	}
     public static void createHotBlocks() {
     	File locations = new File("plugins/EnhancedFire", "Config.yml");
+    	locations.mkdirs();
         if (!locations.exists()) {
             try {
                 locations.createNewFile();
