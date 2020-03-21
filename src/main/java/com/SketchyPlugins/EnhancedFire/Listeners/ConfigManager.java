@@ -2,9 +2,14 @@ package com.SketchyPlugins.EnhancedFire.Listeners;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.logging.Level;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -12,16 +17,22 @@ import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.plugin.java.JavaPlugin;
 
 public class ConfigManager {
+	public static JavaPlugin plugin;
+	
+	public static boolean infiniteCauldrons = false;
 	public static boolean throwFireballs = true;
+	public static boolean enableAsh = true;
 	public static List<Material> hotBlocks;
 	public static List<Material> cookables;
 	public static List<Material> longBurn;
 	public static List<Material> longerBurn;
 	public static List<Material> ultraBurn; 
 	//TODO: make a list and seperate config file to keep track of ash
-	public static void init() {
+	public static void init(JavaPlugin plugin_) {
+		plugin = plugin_;
 		getConfig();
 	}
 	
@@ -73,14 +84,15 @@ public class ConfigManager {
         	createHotBlocks();
         }
         FileConfiguration config = YamlConfiguration.loadConfiguration(locations);
-        throwFireballs = config.getBoolean("CanThrowFireCharge",true);
+        infiniteCauldrons = config.getBoolean("Cauldron Cooking uses Water",true);
+        throwFireballs = config.getBoolean("Throwable Fire Charges",true);
+        enableAsh = config.getBoolean("Burning Blocks make Ash", true);
+        
         hotBlocks = toMaterialsList(config.getStringList("HeatableMaterials"));
         cookables = toMaterialsList(config.getStringList("CauldronCookables"));
         longBurn = toMaterialsList(config.getStringList("LongBurns"));
         longerBurn = toMaterialsList(config.getStringList("LongerBurns"));
         ultraBurn = toMaterialsList(config.getStringList("ExtremelyLongBurns"));
-        
-        //List<Block> bls = (List<Block>) config.getList("AshBlocks");
 	}
 	static List<Material> toMaterialsList(List<String> strs) {
 		List<Material> out = new ArrayList<Material>();
@@ -106,14 +118,10 @@ public class ConfigManager {
     public static void createHotBlocks() {
     	File locations = new File("plugins/EnhancedFire", "Config.yml");
     	locations.mkdirs();
-        if (!locations.exists()) {
-            try {
-                locations.createNewFile();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-        FileConfiguration config = YamlConfiguration.loadConfiguration(locations);
+        
+    	copyResource("config.yml", plugin.getDataFolder().getAbsolutePath()+File.separator+"Config.yml");
+    	
+        /*FileConfiguration config = YamlConfiguration.loadConfiguration(locations);
         config.options().header("Feel free to modify this. Use spigot/bukkit material names (https://hub.spigotmc.org/javadocs/spigot/org/bukkit/Material.html). "
 				+ "\nThe output of the Cauldron Cookables will be the result of the furnace recipe corresponding to said input");
         
@@ -177,6 +185,15 @@ public class ConfigManager {
         	getConfig();
         } catch (IOException e) {
             e.printStackTrace();
-        }
+        }*/
     }
+	public static void copyResource(String res, String dest) {
+	    try {
+	    	InputStream src = plugin.getResource(res);
+			Files.copy(src, Paths.get(dest), StandardCopyOption.REPLACE_EXISTING);
+		} catch (IOException e) {
+			Bukkit.getLogger().log(Level.WARNING, "Internal JAR file missing");
+		}
+	}
+    
 }

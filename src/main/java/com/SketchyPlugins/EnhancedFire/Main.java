@@ -11,8 +11,7 @@ public final class Main extends JavaPlugin{
 	ListenerParent listeners;
 	@Override
 	public void onEnable() {
-		getLogger().info("[EnhancedFire] Enabling");
-		ConfigManager.init();
+		ConfigManager.init(this);
 		listeners = new ListenerParent(this);
 	}
 }

@@ -41,6 +41,8 @@ public class HotBlocksListener implements Listener {
 	protected HashMap<Block,List<Block>> hotBlocks;
 	//returns true if block is hot
 	boolean isHotBlock(Block bl) {
+		if(!bl.getChunk().isLoaded()) //prevent chunk not loaded errors
+			return false;
 		if(!possibleHotBlocks.contains(bl.getType())) //if it can't be hot, return false
 			return false;
 		boolean foundFire = false;

@@ -1,0 +1,50 @@
+# Feel free to modify this. Use spigot/bukkit material names 
+#(https://hub.spigotmc.org/javadocs/spigot/org/bukkit/Material.html). 
+
+Cauldron Cooking uses Water: true
+Throwable Fire Charges: true
+Burning Blocks make Ash: true
+
+#All materials that can "Hot Blocks"
+HeatableMaterials:
+- IRON_BLOCK
+- GOLD_BLOCK
+- SMOOTH_STONE
+- ANDESITE
+- DIORITE
+- GRANITE
+- CAULDRON
+- HOPPER
+- WATER
+
+#Items a cauldron can cook. They must already have a furnace recipe (though datapack recipes are supported) 
+CauldronCookables:
+- BAKED_POTATO
+- MUTTON
+- BEEF
+- PORKCHOP
+- CHICKEN
+- SALMON
+- COD
+- CHORUS_FRUIT
+- RABBIT
+
+#Blocks that will burn twice as long
+LongBurns:
+- ACACIA_PLANKS
+- BIRCH_PLANKS
+- DARK_OAK_PLANKS
+- JUNGLE_PLANKS
+- OAK_PLANKS
+- SPRUCE_PLANKS
+#Blocks that will burn three times as long
+LongerBurns:
+- ACACIA_LOG
+- BIRCH_LOG
+- DARK_OAK_LOG
+- JUNGLE_LOG
+- OAK_LOG
+- SPRUCE_LOG
+#Blocks that will burn five times as long
+ExtremelyLongBurns:
+- COAL_BLOCK

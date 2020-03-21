@@ -42,17 +42,24 @@ public class AshListener  implements Listener {
 		
 		saveLoop();
 	}
+	//called by other classes to create ash
 	public static void addAshBlock(Block bl) {
-		if(bl.isPassable() && Math.random() < 0.5) //plants only sometimes become ash
+		if(!ConfigManager.enableAsh) //if ash is not enabled, don't make it
+			return;
+		
+		if(bl.isPassable() && Math.random() < 0.3) //plants and trapdoors and stuff only sometimes become ash
 			return;
 		
 		//don't make ash all the time to avoid flooding everything with it
+		//instead, only make it with a 60% chance
 		if(Math.random() > 0.6)
 			return;
 		
-		bl.setType(Material.LIGHT_GRAY_CONCRETE_POWDER);
-		if(ashBlocks != null)
+		//only create ash if the class was properly initialized
+		if(ashBlocks != null) {
+			bl.setType(Material.LIGHT_GRAY_CONCRETE_POWDER);
 			ashBlocks.add(bl);
+		}
 	}
 	//save all ash on server restart
 	@EventHandler
@@ -81,6 +88,31 @@ public class AshListener  implements Listener {
 			ashEnts.add((FallingBlock) e.getEntity());
 		}
 	}
+
+	//catches any ash entities landing
+	@EventHandler
+	public void ashLand(EntityChangeBlockEvent e) {
+		if(!ashEnts.contains(e.getEntity()))
+			return;
+		//now we know it's falling sand, so we can remove it and keep the block
+		ashBlocks.add(e.getBlock());
+	}
+	//when ash/concrete powder hardens, prevent it
+	@EventHandler
+	public void ashHarden(BlockFormEvent e) {
+		if(ashBlocks.contains(e.getBlock()))
+			e.setCancelled(true);
+	}
+	
+	//when ash is destroyed or exploded, make sure it breaks it
+	@EventHandler(priority = EventPriority.HIGH)
+	public void ashDestroy(BlockBreakEvent e) {
+		tryAshBreak(e.getBlock());
+	}
+	@EventHandler(priority = EventPriority.HIGH)
+	public void ashExplode(BlockExplodeEvent e) {
+		tryAshBreak(e.getBlock());
+	}
 	//ash can't be pushed
 	@EventHandler
 	public void ashPush(BlockPistonExtendEvent e) {
@@ -103,30 +135,8 @@ public class AshListener  implements Listener {
 				return;
 			}
 	}
-	//catches any ash entities landing
-	@EventHandler
-	public void ashLand(EntityChangeBlockEvent e) {
-		if(!ashEnts.contains(e.getEntity()))
-			return;
-		//now we know it's falling sand, so we can remove it and keep the block
-		ashBlocks.add(e.getBlock());
-	}
-	//when ash/concrete powder hardens, prevent it
-	@EventHandler
-	public void ashHarden(BlockFormEvent e) {
-		if(ashBlocks.contains(e.getBlock()))
-			e.setCancelled(true);
-	}
 	//when ash is mined, give nothing, except for a small chance at flint
-	@EventHandler(priority = EventPriority.HIGH)
-	public void ashDestroy(BlockBreakEvent e) {
-		tryAshBreak(e.getBlock());
-	}
-	@EventHandler(priority = EventPriority.HIGH)
-	public void ashExplode(BlockExplodeEvent e) {
-		tryAshBreak(e.getBlock());
-	}
-	void tryAshBreak(Block b) {
+	private void tryAshBreak(Block b) {
 		if(b == null)
 			return;
 		if(!ashBlocks.contains(b))
@@ -141,6 +151,6 @@ public class AshListener  implements Listener {
 			ExperienceOrb o = (ExperienceOrb) b.getWorld().spawnEntity(b.getLocation().add(Math.random(),1.1,Math.random()), EntityType.EXPERIENCE_ORB);
 			o.setExperience((int)(Math.random()*4)+1);
 		}
-		
+		ashBlocks.remove(b);
 	}
 }

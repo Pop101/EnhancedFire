@@ -74,34 +74,49 @@ public class HotCauldronManager {
 			source.getWorld().dropItemNaturally(source.getLocation().add(0.5,0.5,0.5), item);
 		}
 	}
-	@SuppressWarnings("deprecation")
-	static void changeCauldron(Block c) {
+	
+	//changes a cauldron's water level based on config options
+	private static void changeCauldron(Block c) {
 		BlockState state = c.getState();
-		switch(state.getData().getData()) {
-			case 1: {
-				if(Math.random() < 0.1) //empty cauldron with 10% chance
-					state.setData(new MaterialData(Material.CAULDRON,(byte) (state.getData().getData()-1)));
-				else
-					state.setData(new MaterialData(Material.CAULDRON,(byte) (state.getData().getData()+1)));
-				break;
-			}
-			case 2: {
-				if(Math.random() < 0.5)
-					state.setData(new MaterialData(Material.CAULDRON,(byte) (state.getData().getData()-1)));
-				else
-					state.setData(new MaterialData(Material.CAULDRON,(byte) (state.getData().getData()+1)));
-				break;
-			}
-			case 3: state.setData(new MaterialData(Material.CAULDRON,(byte) (state.getData().getData()-1))); break;
-		}
+		if(ConfigManager.infiniteCauldrons)
+			adjustCauldronInfinite(state);
+		else
+			adjustCauldron(state);
     	state.update();
 	}
-	static boolean isCookable(Material m) {
-		if(FireListener.getFurnaceRecipeResult(new ItemStack(m)) == null)
+	
+	//returns if a material is cookable by cauldrons
+	private static boolean isCookable(Material m) {
+		if(FireListener.getFurnaceRecipeResult(new ItemStack(m)) == null) //if it doesn't have a furnace recipe
 			return false;
-		if(ConfigManager.cookables != null)
+		if(ConfigManager.cookables != null) //if its in the config, return true
 			if(ConfigManager.cookables.contains(m))
 				return true;
-		return false;
+		return false; //else return false
+	}
+	
+	//adjusts the cauldron's water level in such a way that it never runs out
+	@SuppressWarnings("deprecation")
+	private static void adjustCauldronInfinite(BlockState state) {
+		switch(state.getData().getData()) {
+		case 1: {
+			state.setData(new MaterialData(Material.CAULDRON,(byte) (state.getData().getData()+1)));
+			break;
+		}
+		case 2: {
+			if(Math.random() < 0.5)
+				state.setData(new MaterialData(Material.CAULDRON,(byte) (state.getData().getData()-1)));
+			else
+				state.setData(new MaterialData(Material.CAULDRON,(byte) (state.getData().getData()+1)));
+			break;
+		}
+		case 3: state.setData(new MaterialData(Material.CAULDRON,(byte) (state.getData().getData()-1))); break;
+		}
+	}
+	//adjusts the cauldron's water level in such a way that it never runs out
+	private static void adjustCauldron(BlockState state) {
+		byte data = state.getData().getData();
+		if(data > 0 && Math.random() < 0.4) //remove water (if there's water in it) with a 40% chance
+			state.setData(new MaterialData(Material.CAULDRON, data--));
 	}
 }
