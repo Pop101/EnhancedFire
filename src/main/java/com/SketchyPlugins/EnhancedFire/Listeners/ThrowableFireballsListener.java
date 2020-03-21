@@ -18,13 +18,13 @@ public class ThrowableFireballsListener implements Listener {
 		main.getServer().getPluginManager().registerEvents(this, main);
 		plugin = main;
 	}
-	@EventHandler(priority = EventPriority.HIGH)
+	@EventHandler
 	public void playerThrowMainhand(PlayerInteractEvent e) {
 		if (e.getAction() != Action.RIGHT_CLICK_BLOCK && e.getAction() != Action.RIGHT_CLICK_AIR)
 			return;
 		e.setCancelled(tryThrowFireball(e.getPlayer(), e.getPlayer().getInventory().getItemInMainHand())); //if it throws a fireball, cancel the event
 	}
-	@EventHandler(priority = EventPriority.HIGH)
+	@EventHandler
 	public void playerThrowOffhand(PlayerInteractEvent e) {
 		if (e.getAction() != Action.LEFT_CLICK_BLOCK && e.getAction() != Action.LEFT_CLICK_AIR)
 			return;
