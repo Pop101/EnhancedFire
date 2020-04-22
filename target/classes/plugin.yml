@@ -1,6 +1,6 @@
 name: EnhancedFire
 main: com.SketchyPlugins.EnhancedFire.Main
-version: 0.0.1
+version: 0.0.3
 api-version: 1.13
-author: Mr.Random
+author: Pop101
 description: Changes fire mechanics to make it more useful but also more dangerous...
