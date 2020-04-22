@@ -34,9 +34,13 @@ public class AshListener  implements Listener {
 		ashBlocks = ConfigManager.getAsh();
 		if(ashBlocks == null)
 			ashBlocks = new ArrayList<Block>();
-		//set all ash to ash material
-		for(Block b : ashBlocks) 
-			b.setType(Material.LIGHT_GRAY_CONCRETE_POWDER);
+		
+		//remove all ash blocks that aren't concrete
+		for(int i = ashBlocks.size()-1; i >= 0; i--) 
+			if(ashBlocks.get(i).getType() != Material.LIGHT_GRAY_CONCRETE_POWDER)
+				ashBlocks.remove(i);
+		//save the blocks
+		ConfigManager.saveAsh(ashBlocks);
 		
 		ashEnts = new ArrayList<FallingBlock>();
 		
