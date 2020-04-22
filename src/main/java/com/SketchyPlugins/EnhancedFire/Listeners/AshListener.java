@@ -109,11 +109,11 @@ public class AshListener  implements Listener {
 	}
 	
 	//when ash is destroyed or exploded, make sure it breaks it
-	@EventHandler(priority = EventPriority.HIGH)
+	@EventHandler
 	public void ashDestroy(BlockBreakEvent e) {
 		tryAshBreak(e.getBlock());
 	}
-	@EventHandler(priority = EventPriority.HIGH)
+	@EventHandler
 	public void ashExplode(BlockExplodeEvent e) {
 		tryAshBreak(e.getBlock());
 	}
