@@ -47,7 +47,8 @@ public class ConfigManager {
         config.options().header("Don't touch this please");
         List<String> serialized = new ArrayList<String>();
         for(Block b : bl) {
-        	serialized.add(locationToString(b.getLocation()));
+        	if(b.getType() == Material.LIGHT_GRAY_CONCRETE_POWDER) //double check here (hard coding bad though)
+        		serialized.add(locationToString(b.getLocation()));
         }
         
         config.set("AshLocs", serialized);
