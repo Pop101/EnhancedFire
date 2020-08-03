@@ -163,7 +163,7 @@ public class AshListener  implements Listener {
 			b.getWorld().dropItemNaturally(b.getLocation(), new ItemStack(Material.FLINT));
 		
 		//drop exp
-		while(Math.random() > 0.4) {
+		while(Math.random() > ConfigManager.ashExpChance) {
 			ExperienceOrb o = (ExperienceOrb) b.getWorld().spawnEntity(b.getLocation().add(Math.random(),1.1,Math.random()), EntityType.EXPERIENCE_ORB);
 			o.setExperience((int)(Math.random()*4)+1);
 		}

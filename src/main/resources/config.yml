@@ -8,6 +8,15 @@ Burning Blocks make Ash: true
 # Chance for ash to become flint. 0.1 = 10%. Set to 0 to disable ash dropping flint
 Ash Flint Chance: 0.1
 
+# Chance for ash to be created when "solid" (logs, leaves, coal, etc) blocks are burnt down
+Ash Creation Chance: 0.6
+
+# Chance for ash to be created when "passable" (grass, trapdoors, etc) blocks are burnt down
+Passable Ash Creation Chance: 0.3
+
+# Cumulative chance for ash to drop experience. If it is 0.4, the chance to drop 2 orbs is 0.16 (0.4^2). Do not set to 1
+Cumulative Ash Experience Chance: 0.4
+
 #All materials that can "Hot Blocks"
 HeatableMaterials:
 - IRON_BLOCK

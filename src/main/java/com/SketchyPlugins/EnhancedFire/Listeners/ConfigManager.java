@@ -26,6 +26,9 @@ public class ConfigManager {
 	public static boolean throwFireballs = true;
 	public static boolean enableAsh = true;
 	public static double ashFlintchance = 0.1;
+	public static double ashCreationChance = 0.6;
+	public static double ashPassableCreationChance = 0.3;
+	public static double ashExpChance = 0.4;
 	public static List<Material> hotBlocks;
 	public static List<Material> cookables;
 	public static List<Material> longBurn;
@@ -87,6 +90,9 @@ public class ConfigManager {
         throwFireballs = config.getBoolean("Throwable Fire Charges",true);
         enableAsh = config.getBoolean("Burning Blocks make Ash", true);
         ashFlintchance = config.getDouble("Ash Flint Chance", ashFlintchance);
+        ashCreationChance = config.getDouble("Ash Creation Chance", ashCreationChance);
+        ashPassableCreationChance = config.getDouble("Passable Ash Creation Chance", ashPassableCreationChance);
+        ashExpChance = config.getDouble("Cumulative Ash Experience Chance", ashExpChance);
         
         hotBlocks = toMaterialsList(config.getStringList("HeatableMaterials"));
         cookables = toMaterialsList(config.getStringList("CauldronCookables"));
