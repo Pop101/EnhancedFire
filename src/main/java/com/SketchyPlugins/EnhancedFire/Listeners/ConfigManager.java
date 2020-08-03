@@ -25,6 +25,7 @@ public class ConfigManager {
 	public static boolean infiniteCauldrons = false;
 	public static boolean throwFireballs = true;
 	public static boolean enableAsh = true;
+	public static double ashFlintchance = 0.1;
 	public static List<Material> hotBlocks;
 	public static List<Material> cookables;
 	public static List<Material> longBurn;
@@ -85,6 +86,7 @@ public class ConfigManager {
         infiniteCauldrons = config.getBoolean("Cauldron Cooking uses Water",true);
         throwFireballs = config.getBoolean("Throwable Fire Charges",true);
         enableAsh = config.getBoolean("Burning Blocks make Ash", true);
+        ashFlintchance = config.getDouble("Ash Flint Chance", ashFlintchance);
         
         hotBlocks = toMaterialsList(config.getStringList("HeatableMaterials"));
         cookables = toMaterialsList(config.getStringList("CauldronCookables"));

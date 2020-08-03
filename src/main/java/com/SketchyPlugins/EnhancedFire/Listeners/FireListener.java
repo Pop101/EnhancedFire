@@ -76,8 +76,6 @@ public class FireListener  implements Listener {
 		
 		//set block to ash, to be tracked by the AshListener
 		AshListener.addAshBlock(e.getBlock());
-		
-		e.setCancelled(true);
 	}
 	
 	public static ItemStack getFurnaceRecipeResult(ItemStack in) {

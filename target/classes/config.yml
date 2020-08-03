@@ -5,6 +5,9 @@ Cauldron Cooking uses Water: true
 Throwable Fire Charges: true
 Burning Blocks make Ash: true
 
+# Chance for ash to become flint. 0.1 = 10%. Set to 0 to disable ash dropping flint
+Ash Flint Chance: 0.1
+
 #All materials that can "Hot Blocks"
 HeatableMaterials:
 - IRON_BLOCK

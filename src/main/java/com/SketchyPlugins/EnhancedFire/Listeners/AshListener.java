@@ -6,6 +6,7 @@ import java.util.List;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
+import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.ExperienceOrb;
 import org.bukkit.entity.FallingBlock;
@@ -21,6 +22,8 @@ import org.bukkit.event.entity.EntityChangeBlockEvent;
 import org.bukkit.event.entity.EntitySpawnEvent;
 import org.bukkit.event.server.PluginDisableEvent;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.Damageable;
+import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public class AshListener  implements Listener {
@@ -111,7 +114,14 @@ public class AshListener  implements Listener {
 	//when ash is destroyed or exploded, make sure it breaks it
 	@EventHandler
 	public void ashDestroy(BlockBreakEvent e) {
-		tryAshBreak(e.getBlock());
+		//attempt ash break. if it was an ash block, manually damage the player's held item
+		if(tryAshBreak(e.getBlock())) {
+			ItemStack hand = e.getPlayer().getInventory().getItemInMainHand();
+			
+			//respect unbreaking
+			if(Math.random() <= 1.0/hand.getEnchantmentLevel(Enchantment.DURABILITY))
+				damageItem(hand, 1);
+		}
 	}
 	@EventHandler
 	public void ashExplode(BlockExplodeEvent e) {
@@ -140,21 +150,38 @@ public class AshListener  implements Listener {
 			}
 	}
 	//when ash is mined, give nothing, except for a small chance at flint
-	private void tryAshBreak(Block b) {
+	private boolean tryAshBreak(Block b) {
 		if(b == null)
-			return;
+			return false;
 		if(!ashBlocks.contains(b))
-			return;
+			return false;
 		
-		b.setType(Material.AIR);
+		b.setType(Material.AIR);		
+		
 		//drop flint with 10% chance
-		if(Math.random() < 0.1)
+		if(Math.random() < ConfigManager.ashFlintchance)
 			b.getWorld().dropItemNaturally(b.getLocation(), new ItemStack(Material.FLINT));
+		
 		//drop exp
 		while(Math.random() > 0.4) {
 			ExperienceOrb o = (ExperienceOrb) b.getWorld().spawnEntity(b.getLocation().add(Math.random(),1.1,Math.random()), EntityType.EXPERIENCE_ORB);
 			o.setExperience((int)(Math.random()*4)+1);
 		}
 		ashBlocks.remove(b);
+		
+		return true;
 	}
+	//damages the item stack
+	public void damageItem(ItemStack tool, int toDamage) {
+		if(!(tool.getItemMeta() instanceof Damageable)) return;
+		
+        Damageable itemdmg = (Damageable) tool.getItemMeta();
+        int damage = itemdmg.getDamage() + toDamage;
+        itemdmg.setDamage((short) damage);
+        tool.setItemMeta((ItemMeta) itemdmg);
+     
+        if(itemdmg.getDamage() <= 0) {
+        	tool.setType(Material.AIR);
+        }
+    }
 }
