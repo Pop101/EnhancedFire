@@ -69,7 +69,7 @@ public class AshListener  implements Listener {
 			}
 		}
 		else if (type == 2) { //particles
-			bl.getWorld().spawnParticle(Particle.SUSPENDED_DEPTH, bl.getLocation().add(0.5, 0.4, 0.5), 4, 0.4, 0.4, 0.4, 0.05);
+			bl.getWorld().spawnParticle(Particle.FALLING_DUST, bl.getLocation().add(0.5, 0.4, 0.5), 20, 0.4, 0.4, 0.4, 0.05);
 			//drop flint with 10% chance
 			if(Math.random() < ConfigManager.ashFlintchance)
 				bl.getWorld().dropItemNaturally(bl.getLocation().add(0.5,0.5,0.5), new ItemStack(Material.FLINT));

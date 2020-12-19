@@ -11,9 +11,17 @@ permissions:
       children:
          EnhancedFire.immunity.blocks: true
          EnhancedFire.immunity.water: true
+         EnhancedFire.immunity.fire: true
+         EnhancedFire.immunity.lava: true
    EnhancedFire.immunity.blocks:
       description: Provides immunity from dry, heated blocks
       default: false
    EnhancedFire.immunity.water:
       description: Provides immunity from heated water and cauldrons
+      default: false
+   EnhancedFire.immunity.fire:
+      description: Provides immunity from fire damage, but not from being ignited
+      default: false
+   EnhancedFire.immunity.lava:
+      description: Provides immunity from swimming in lava
       default: false
