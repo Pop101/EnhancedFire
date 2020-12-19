@@ -5,6 +5,7 @@ import java.util.List;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
+import org.bukkit.Particle;
 import org.bukkit.block.Block;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.EntityType;
@@ -34,14 +35,15 @@ public class AshListener  implements Listener {
 		plugin = main;
 		main.getServer().getPluginManager().registerEvents(this, main);
 		
-		ashBlocks = ConfigManager.getAsh();
+		ashBlocks = ConfigManager.loadAsh();
 		if(ashBlocks == null)
 			ashBlocks = new ArrayList<Block>();
 		
 		//remove all ash blocks that aren't concrete
 		for(int i = ashBlocks.size()-1; i >= 0; i--) 
-			if(ashBlocks.get(i).getType() != Material.LIGHT_GRAY_CONCRETE_POWDER)
+			if(ashBlocks.get(i).getType() != ConfigManager.ashMat)
 				ashBlocks.remove(i);
+		
 		//save the blocks
 		ConfigManager.saveAsh(ashBlocks);
 		
@@ -50,30 +52,38 @@ public class AshListener  implements Listener {
 		saveLoop();
 	}
 	//called by other classes to create ash
-	public static void addAshBlock(Block bl) {
+	public static void createAsh(Block bl) {
 		if(!ConfigManager.enableAsh) //if ash is not enabled, don't make it
 			return;
 		
-		if(bl.isPassable() && Math.random() < 0.3) //plants and trapdoors and stuff only sometimes become ash
+		//Only create if chance matches
+		if(Math.random() > ConfigManager.ashType.get(bl.getType()).chance) 
 			return;
 		
-		//don't make ash all the time to avoid flooding everything with it
-		//instead, only make it with a 60% chance
-		if(Math.random() > 0.6)
-			return;
-		
-		//only create ash if the class was properly initialized
-		if(ashBlocks != null) {
-			bl.setType(Material.LIGHT_GRAY_CONCRETE_POWDER);
-			ashBlocks.add(bl);
+		int type = ConfigManager.ashType.get(bl.getType()).type;
+		if(type == 1) { //block
+			//only create ash if the class was properly initialized
+			if(ashBlocks != null) {
+				bl.setType(ConfigManager.ashMat);
+				ashBlocks.add(bl);
+			}
+		}
+		else if (type == 2) { //particles
+			bl.getWorld().spawnParticle(Particle.SUSPENDED_DEPTH, bl.getLocation().add(0.5, 0.4, 0.5), 4, 0.4, 0.4, 0.4, 0.05);
+		}
+		else if (type == 3) { //scorch
+			Block below = bl.getLocation().add(0,-1,0).getBlock();
+			Material toReplace = ConfigManager.scorchRecipes.getOrDefault(below.getType(), null);
+			if(toReplace != null) below.setType(toReplace);
 		}
 	}
+	
 	//save all ash on server restart
 	@EventHandler
 	public void onDisable(PluginDisableEvent e) {
 		//TODO: save this in a yaml file instead of deleting it all
 		ConfigManager.saveAsh(ashBlocks);
-		//for(Block bl : ashBlocks)
+		//for(Block bl : ashBlocks) 
 		//	bl.setType(Material.AIR);
 		for(FallingBlock ash : ashEnts)
 			ash.remove();
@@ -86,6 +96,7 @@ public class AshListener  implements Listener {
             }
         },20*30);
 	}
+	
 	//catches falling sand spawning where a block would be
 	@EventHandler
 	public void ashFalling(EntitySpawnEvent e) {
@@ -123,10 +134,12 @@ public class AshListener  implements Listener {
 				damageItem(hand, 1);
 		}
 	}
+	
 	@EventHandler
 	public void ashExplode(BlockExplodeEvent e) {
 		tryAshBreak(e.getBlock());
 	}
+	
 	//ash can't be pushed
 	@EventHandler
 	public void ashPush(BlockPistonExtendEvent e) {
@@ -138,6 +151,7 @@ public class AshListener  implements Listener {
 				return;
 			}
 	}
+	
 	//ash can't be pulled
 	@EventHandler
 	public void ashPull(BlockPistonRetractEvent e) {
@@ -149,6 +163,7 @@ public class AshListener  implements Listener {
 				return;
 			}
 	}
+	
 	//when ash is mined, give nothing, except for a small chance at flint
 	private boolean tryAshBreak(Block b) {
 		if(b == null)
@@ -171,6 +186,7 @@ public class AshListener  implements Listener {
 		
 		return true;
 	}
+	
 	//damages the item stack
 	public void damageItem(ItemStack tool, int toDamage) {
 		if(!(tool.getItemMeta() instanceof Damageable)) return;

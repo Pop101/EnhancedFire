@@ -78,7 +78,6 @@ public class HotBlocksListener implements Listener {
 	}*/
 
 	//does additional scans as well as the damage
-	final int damage = 2;
 	public void loop() {
 		//scan near all players
 		for(Player pl : Bukkit.getServer().getOnlinePlayers())
@@ -139,14 +138,14 @@ public class HotBlocksListener implements Listener {
 		Location onTop = b.getLocation().add(0.5,1,0.5);
 		for(Entity e : onTop.getWorld().getNearbyEntities(onTop, 0.24, 0.24, 0.24)) {
 			if(e instanceof Damageable)
-				((Damageable) e).damage(damage);
+				((Damageable) e).damage(ConfigManager.hotdamage);
 		}
 		//if cauldron, do special stuff
 		if(b.getType() == Material.CAULDRON) {
 			//damage entities inside it as well
 			for(Entity e : b.getWorld().getNearbyEntities(b.getLocation().add(0.5,0.25,0.5), 0.24, 0.24, 0.24)) {
 				if(e instanceof Damageable)
-					((Damageable) e).damage(damage);
+					((Damageable) e).damage(ConfigManager.hotdamage);
 			}
 			//call cauldron tick
 			if(b.getData() > 0)

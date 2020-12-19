@@ -30,6 +30,7 @@ public class ThrowableFireballsListener implements Listener {
 			return;
 		e.setCancelled(tryThrowFireball(e.getPlayer(), e.getPlayer().getInventory().getItemInOffHand())); //if it throws a fireball, cancel the event
 	}
+	
 	boolean tryThrowFireball(Player plr, ItemStack st) {
 		if(st == null)
 			return false;

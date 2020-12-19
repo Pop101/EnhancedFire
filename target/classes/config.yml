@@ -1,24 +1,22 @@
 # Feel free to modify this. Use spigot/bukkit material names 
 #(https://hub.spigotmc.org/javadocs/spigot/org/bukkit/Material.html). 
 
+Burning down Blocks Cooks them: true
 Cauldron Cooking uses Water: true
 Throwable Fire Charges: true
 Burning Blocks make Ash: true
 
+# Damage hot blocks deal every tick. 2 = 1 heart, decimals allowed
+Hot Block Damage: 2.0
+
 # Chance for ash to become flint. 0.1 = 10%. Set to 0 to disable ash dropping flint
 Ash Flint Chance: 0.1
-
-# Chance for ash to be created when "solid" (logs, leaves, coal, etc) blocks are burnt down
-Ash Creation Chance: 0.6
-
-# Chance for ash to be created when "passable" (grass, trapdoors, etc) blocks are burnt down
-Passable Ash Creation Chance: 0.3
 
 # Cumulative chance for ash to drop experience. If it is 0.4, the chance to drop 2 orbs is 0.16 (0.4^2). Do not set to 1
 Cumulative Ash Experience Chance: 0.4
 
-#All materials that can "Hot Blocks"
-HeatableMaterials:
+# All materials that can "Hot Blocks"
+Heatable Materials:
 - IRON_BLOCK
 - GOLD_BLOCK
 - SMOOTH_STONE
@@ -29,8 +27,8 @@ HeatableMaterials:
 - HOPPER
 - WATER
 
-#Items a cauldron can cook. They must already have a furnace recipe (though datapack recipes are supported) 
-CauldronCookables:
+# Items a cauldron can cook. They must already have a furnace recipe (though datapack recipes are supported) 
+Cauldron Cookables:
 - BAKED_POTATO
 - MUTTON
 - BEEF
@@ -41,22 +39,62 @@ CauldronCookables:
 - CHORUS_FRUIT
 - RABBIT
 
-#Blocks that will burn twice as long
-LongBurns:
-- ACACIA_PLANKS
-- BIRCH_PLANKS
-- DARK_OAK_PLANKS
-- JUNGLE_PLANKS
-- OAK_PLANKS
-- SPRUCE_PLANKS
-#Blocks that will burn three times as long
-LongerBurns:
-- ACACIA_LOG
-- BIRCH_LOG
-- DARK_OAK_LOG
-- JUNGLE_LOG
-- OAK_LOG
-- SPRUCE_LOG
-#Blocks that will burn five times as long
-ExtremelyLongBurns:
-- COAL_BLOCK
+# How many times longer materials should take to burn
+Burn Times:
+   ACACIA_PLANKS: 2
+   BIRCH_PLANKS: 2
+   DARK_OAK_PLANKS: 2
+   JUNGLE_PLANKS: 2
+   OAK_PLANKS: 2
+   SPRUCE_PLANKS: 2
+   
+   ACACIA_LOG: 4
+   BIRCH_LOG: 4
+   DARK_OAK_LOG: 4
+   JUNGLE_LOG: 4
+   OAK_LOG: 4
+   SPRUCE_LOG: 4
+   
+   COAL_BLOCK: 10
+
+# Ash Information
+# types:
+#   block: spawns a block of ash that can be mined
+#   particles: spawns particles that immediately drop the ash loot
+#   scorch: applies a 'scorch recipe' to the block below
+#   none: overrides a specific burnable block to not drop ash
+Ash Details:
+   # Default for when "solid" (logs, leaves, coal, etc) blocks are burnt down
+   # If removed, no blocks (other than explicit references here) will create ash
+   DEFAULT:
+      Chance: 0.6
+      Type: block
+   
+   # Default for when "passable" (grass, trapdoors, etc) blocks are burnt down
+   # If removed, will follow default
+   PASSABLE: 
+      Chance: 1.0
+      Type: particle
+   
+   # Explicit references override all defaults
+   # Just remember to use Bukkit material names!
+   GRASS:
+      Chance: 1.0
+      Type: scorch
+   WHEAT:
+      Chance: 1.0
+      Type: scorch
+   ROSE_BUSH:
+      Chance: 1.0
+      Type: scorch
+   LILAC:
+      Chance: 1.0
+      Type: scorch
+
+Scorch Recipes:
+   GRASS_BLOCK: COARSE_DIRT
+   FARMLAND: COARSE_DIRT
+   DIRT: COARSE_DIRT
+   PODZOL: COARSE_DIRT
+   
+   

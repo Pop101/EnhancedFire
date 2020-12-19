@@ -7,7 +7,9 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.logging.Level;
 
@@ -15,6 +17,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -22,6 +25,9 @@ import org.bukkit.plugin.java.JavaPlugin;
 public class ConfigManager {
 	public static JavaPlugin plugin;
 	
+	public static Material ashMat = Material.LIGHT_GRAY_CONCRETE_POWDER;
+	public static double hotdamage = 2.0;
+	public static boolean burncook = true;
 	public static boolean infiniteCauldrons = false;
 	public static boolean throwFireballs = true;
 	public static boolean enableAsh = true;
@@ -31,13 +37,90 @@ public class ConfigManager {
 	public static double ashExpChance = 0.4;
 	public static List<Material> hotBlocks;
 	public static List<Material> cookables;
-	public static List<Material> longBurn;
-	public static List<Material> longerBurn;
-	public static List<Material> ultraBurn; 
-	//TODO: make a list and seperate config file to keep track of ash
+	public static HashMap<Material, Integer> burnLength;
+	public static HashMap<Material, AshData> ashType; 
+	public static HashMap<Material, Material> scorchRecipes;
+	
+	
 	public static void init(JavaPlugin plugin_) {
 		plugin = plugin_;
-		getConfig();
+		
+		File location = new File("plugins/EnhancedFire", "Config.yml");
+        if (!location.exists()) {
+        	location.mkdirs();
+        	copyResource("config.yml", plugin.getDataFolder().getAbsolutePath()+File.separator+"Config.yml");
+        }
+        
+        FileConfiguration config = YamlConfiguration.loadConfiguration(location);
+        burncook = config.getBoolean("Burning down Blocks Cooks them", true);
+        hotdamage = config.getDouble("Hot Block Damage", 2.0);
+        infiniteCauldrons = config.getBoolean("Cauldron Cooking uses Water",true);
+        throwFireballs = config.getBoolean("Throwable Fire Charges",true);
+        enableAsh = config.getBoolean("Burning Blocks make Ash", true);
+        ashFlintchance = config.getDouble("Ash Flint Chance", ashFlintchance);
+        ashCreationChance = config.getDouble("Ash Creation Chance", ashCreationChance);
+        ashPassableCreationChance = config.getDouble("Passable Ash Creation Chance", ashPassableCreationChance);
+        ashExpChance = config.getDouble("Cumulative Ash Experience Chance", ashExpChance);
+        if(ashExpChance >= 0.98) ashExpChance = 0.98; //still stupidly high
+        
+        hotBlocks = toMaterialsList(config.getStringList("Heatable Materials"));
+        cookables = toMaterialsList(config.getStringList("Cauldron Cookables"));
+        
+        burnLength = new HashMap<Material, Integer>();
+        ashType = new HashMap<Material, AshData>();
+        scorchRecipes = new HashMap<Material, Material>();
+        
+        //load burn times
+        Map<String, Object> bs = plugin.getConfig().getConfigurationSection("Burn Times").getValues(false);
+		for(String key : bs.keySet()) {
+			Material m = safeMatParse(key);
+			int time = safeParse(bs.toString(), 1);
+			if(m != null) burnLength.put(m, time);
+		}
+		
+		//load ash info
+		Map<String, Object> ads = plugin.getConfig().getConfigurationSection("Ash Details").getValues(false);
+		AshData def = null;
+		AshData pass = null;
+		for(String key : ads.keySet()) {
+			AshData ad = null;
+			Object o = ads.get(key);
+			
+			//parse to AshData
+			if(o instanceof ConfigurationSection) {
+				ConfigurationSection cs = (ConfigurationSection) o;
+				String type = cs.getString("Type","block").strip().toLowerCase();
+				int type_int = 0;
+				if(type.equals("normal")) type_int = 1;
+				if(type.equals("particles")) type_int = 2;
+				if(type.equals("scorch")) type_int = 3;
+				ad = new AshData(type_int, (float) cs.getDouble("Chance", 0.0));
+			}
+			
+			//parse and apply key
+			if(key.strip().equalsIgnoreCase("default")) def = ad;
+			else if(key.strip().equalsIgnoreCase("passable")) pass = ad;
+			else {
+				Material m = safeMatParse(key);
+				if(m != null) ashType.put(m, ad);
+			}
+		}
+		
+		//apply ash defaults
+		for(Material m : Material.values()) {
+			if(ashType.containsKey(m)) continue;
+			
+			if(pass != null && m.isTransparent()) ashType.put(m, pass);
+			else if(def != null) ashType.put(m, pass);
+		}
+		
+		//parse scorch recipes
+		Map<String, Object> sr = plugin.getConfig().getConfigurationSection("Scorch Recipes").getValues(false);
+		for(String key : sr.keySet()) {
+			Material i = safeMatParse(key);
+			Material o = safeMatParse(sr.get(key).toString());
+			if(i != null && o != null) scorchRecipes.put(i, o);
+		}
 	}
 	
 	public static void saveAsh(List<Block> bl) {
@@ -51,7 +134,7 @@ public class ConfigManager {
         config.options().header("Don't touch this please");
         List<String> serialized = new ArrayList<String>();
         for(Block b : bl) {
-        	if(b.getType() == Material.LIGHT_GRAY_CONCRETE_POWDER) //double check here (hard coding bad though)
+        	if(b.getType() == Material.LIGHT_GRAY_CONCRETE_POWDER && b.getLocation() != null) //double check here (hard coding bad though)
         		serialized.add(locationToString(b.getLocation()));
         }
         
@@ -61,7 +144,8 @@ public class ConfigManager {
 			config.save(locations);
 		} catch (IOException e) {e.printStackTrace();}
 	}
-	public static List<Block> getAsh(){
+	
+	public static List<Block> loadAsh(){
 		File locations = new File("plugins/EnhancedFire", "AshLocations.yml");
         if (!locations.exists()) {
         	saveAsh(new ArrayList<Block>());
@@ -71,43 +155,41 @@ public class ConfigManager {
         for(String s : config.getStringList("AshLocs")) {
         	if(s != null) {
 	        	Location loc = locationFromString(s);
-	        	if(loc != null && !loc.equals(null)) {
+	        	if(loc != null) {
 	        		Block bl = loc.getBlock();
-	        		if(bl != null)
-	        			unserialized.add(bl);
+	        		if(bl != null) unserialized.add(bl);
 	        	}
         	}
         }
         return unserialized;
 	}
-	static void getConfig() {
-		File locations = new File("plugins/EnhancedFire", "Config.yml");
-        if (!locations.exists()) {
-        	createHotBlocks();
-        }
-        FileConfiguration config = YamlConfiguration.loadConfiguration(locations);
-        infiniteCauldrons = config.getBoolean("Cauldron Cooking uses Water",true);
-        throwFireballs = config.getBoolean("Throwable Fire Charges",true);
-        enableAsh = config.getBoolean("Burning Blocks make Ash", true);
-        ashFlintchance = config.getDouble("Ash Flint Chance", ashFlintchance);
-        ashCreationChance = config.getDouble("Ash Creation Chance", ashCreationChance);
-        ashPassableCreationChance = config.getDouble("Passable Ash Creation Chance", ashPassableCreationChance);
-        ashExpChance = config.getDouble("Cumulative Ash Experience Chance", ashExpChance);
-        
-        hotBlocks = toMaterialsList(config.getStringList("HeatableMaterials"));
-        cookables = toMaterialsList(config.getStringList("CauldronCookables"));
-        longBurn = toMaterialsList(config.getStringList("LongBurns"));
-        longerBurn = toMaterialsList(config.getStringList("LongerBurns"));
-        ultraBurn = toMaterialsList(config.getStringList("ExtremelyLongBurns"));
-	}
-	static List<Material> toMaterialsList(List<String> strs) {
+	
+	private static List<Material> toMaterialsList(List<String> strs) {
 		List<Material> out = new ArrayList<Material>();
 		for(String str : strs) {
-			out.add(Material.valueOf(str));
+			out.add(safeMatParse(str));
 		}
 		return out;
 	}
-	static final String regex = "~";
+	private static int safeParse(String s, int def) {
+		try {
+			return Integer.parseInt(s);
+		}
+		catch(Exception e) {
+			return def;
+		}
+	}
+	
+	private static Material safeMatParse(String s) {
+		try {
+			return Material.valueOf(s.strip().toUpperCase());
+		}
+		catch(Exception e) {
+			return null;
+		}
+	}
+	
+	private static final String regex = "~";
 	public static String locationToString(Location loc) {
 		return loc.getWorld().getUID()+regex+loc.getX()+regex+loc.getY()+regex+loc.getZ();
 	}
@@ -121,12 +203,7 @@ public class ConfigManager {
 			return null;
 		}
 	}
-    public static void createHotBlocks() {
-    	File locations = new File("plugins/EnhancedFire", "Config.yml");
-    	locations.mkdirs();
-        
-    	copyResource("config.yml", plugin.getDataFolder().getAbsolutePath()+File.separator+"Config.yml");
-    }
+	
 	public static void copyResource(String res, String dest) {
 	    try {
 	    	InputStream src = plugin.getResource(res);
@@ -136,4 +213,9 @@ public class ConfigManager {
 		}
 	}
     
+	static class AshData {
+		public int type; //0: none. 1: default ash. 2: particle. 3: scorch earth
+		public float chance;
+		public AshData(int t, float c) {type=t; chance=c;}
+	}
 }

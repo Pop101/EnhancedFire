@@ -25,36 +25,29 @@ public class FireListener  implements Listener {
 		plugin = main;
 		main.getServer().getPluginManager().registerEvents(this, main);
 		
-		burnDictionary = new HashMap<Material, Integer>();
 		burningBlocks = new HashMap<Block, Integer>();	
-		
-		//populate ideal burn times
-		for(Material mat : ConfigManager.ultraBurn)
-			burnDictionary.put(mat, 5);
-		
-		for(Material mat : ConfigManager.longerBurn)
-			burnDictionary.put(mat, 2);
-		
-		for(Material mat : ConfigManager.longBurn)
-			burnDictionary.put(mat, 1);
 	}
-	protected Map<Material, Integer> burnDictionary; //tracks ideal burn times
+	
 	protected Map<Block, Integer> burningBlocks; //tracks
 	
 	@EventHandler
 	public void blockLightedHandler(BlockIgniteEvent e) {
-		burningBlocks.put(e.getBlock(), burnDictionary.getOrDefault(e.getBlock().getType(),0));
+		burningBlocks.put(e.getBlock(), ConfigManager.burnLength.getOrDefault(e.getBlock().getType(),1)-1);
 	}
+	
 	@EventHandler
 	public void blockPlaceEvent(BlockPlaceEvent e) { //special-case for when a player places fire
 		if(e.getBlock().getType() == Material.FIRE)
-			burningBlocks.put(e.getBlockAgainst(), burnDictionary.getOrDefault(e.getBlockAgainst().getType(),0));
+			burningBlocks.put(e.getBlockAgainst(), ConfigManager.burnLength.getOrDefault(e.getBlockAgainst().getType(),1)-1);
 	}
+	
 	//if block is broken, remove it
+	@EventHandler
 	public void blockBreakRemover(BlockBreakEvent e) {
 		if(burningBlocks.containsKey(e.getBlock()))
 			burningBlocks.remove(e.getBlock());
 	}
+	
 	//when a block burns down, catch it if it's supposed to be caught
 	@EventHandler
 	public void blockBurnHandler(BlockBurnEvent e) {
@@ -69,13 +62,16 @@ public class FireListener  implements Listener {
 				burningBlocks.remove(e.getBlock());
 			}
 		}
+		
 		//drop furnace results
-		ItemStack toDrop = getFurnaceRecipeResult(new ItemStack(e.getBlock().getType()));
-		if(toDrop != null)
-			e.getBlock().getWorld().dropItemNaturally(e.getBlock().getLocation(), toDrop);
+		if(ConfigManager.burncook) {
+			ItemStack toDrop = getFurnaceRecipeResult(new ItemStack(e.getBlock().getType()));
+			if(toDrop != null)
+				e.getBlock().getWorld().dropItemNaturally(e.getBlock().getLocation(), toDrop);
+		}
 		
 		//set block to ash, to be tracked by the AshListener
-		AshListener.addAshBlock(e.getBlock());
+		AshListener.createAsh(e.getBlock());
 	}
 	
 	public static ItemStack getFurnaceRecipeResult(ItemStack in) {
@@ -93,14 +89,5 @@ public class FireListener  implements Listener {
 		}
 		//otherwise return a stack of air (null basically)
 		return null;
-	}
-}
-class BlockBurnInfo{
-	protected Material mat;
-	protected int burnCatches;
-	
-	public BlockBurnInfo(Material _mat, int lifetime) {
-		mat = _mat;
-		burnCatches = lifetime;
 	}
 }
