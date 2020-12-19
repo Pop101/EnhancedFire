@@ -134,17 +134,23 @@ public class HotBlocksListener implements Listener {
         },15);
 	}
 	void hotBlockTick(final Block b) {
+		String permission = "EnhancedFire.immunity.";
+		if(b.getType() == Material.WATER || b.getType() == Material.CAULDRON)
+			permission += "water";
+		else
+			permission += "blocks";
+		
 		//do damage
 		Location onTop = b.getLocation().add(0.5,1,0.5);
 		for(Entity e : onTop.getWorld().getNearbyEntities(onTop, 0.24, 0.24, 0.24)) {
-			if(e instanceof Damageable)
+			if(e instanceof Damageable && !e.hasPermission("EnhancedFire.immunity") && !e.hasPermission(permission))
 				((Damageable) e).damage(ConfigManager.hotdamage);
 		}
 		//if cauldron, do special stuff
 		if(b.getType() == Material.CAULDRON) {
 			//damage entities inside it as well
 			for(Entity e : b.getWorld().getNearbyEntities(b.getLocation().add(0.5,0.25,0.5), 0.24, 0.24, 0.24)) {
-				if(e instanceof Damageable)
+				if(e instanceof Damageable && !e.hasPermission("EnhancedFire.immunity") && !e.hasPermission(permission))
 					((Damageable) e).damage(ConfigManager.hotdamage);
 			}
 			//call cauldron tick
