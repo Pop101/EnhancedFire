@@ -52,6 +52,11 @@ public class ConfigManager {
         }
         
         FileConfiguration config = YamlConfiguration.loadConfiguration(location);
+        if(config.getConfigurationSection("Burn Times") == null) { // some new arbitrary check
+        	copyResource("config.yml", plugin.getDataFolder().getAbsolutePath()+File.separator+"Config.yml");
+        	config = YamlConfiguration.loadConfiguration(location);
+        }
+        
         ashMat = safeMatParse(config.getString("Ash Material", "LIGHT_GRAY_CONCRETE_POWDER"));
         if(ashMat == null) ashMat = Material.LIGHT_GRAY_CONCRETE_POWDER;
         
