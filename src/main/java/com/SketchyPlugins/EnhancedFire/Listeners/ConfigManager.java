@@ -52,6 +52,9 @@ public class ConfigManager {
         }
         
         FileConfiguration config = YamlConfiguration.loadConfiguration(location);
+        ashMat = safeMatParse(config.getString("Ash Material", "LIGHT_GRAY_CONCRETE_POWDER"));
+        if(ashMat == null) ashMat = Material.LIGHT_GRAY_CONCRETE_POWDER;
+        
         burncook = config.getBoolean("Burning down Blocks Cooks them", true);
         hotdamage = config.getDouble("Hot Block Damage", 2.0);
         infiniteCauldrons = config.getBoolean("Cauldron Cooking uses Water",true);
@@ -60,6 +63,7 @@ public class ConfigManager {
         ashFlintchance = config.getDouble("Ash Flint Chance", ashFlintchance);
         ashCreationChance = config.getDouble("Ash Creation Chance", ashCreationChance);
         ashPassableCreationChance = config.getDouble("Passable Ash Creation Chance", ashPassableCreationChance);
+        
         ashExpChance = config.getDouble("Cumulative Ash Experience Chance", ashExpChance);
         if(ashExpChance >= 0.98) ashExpChance = 0.98; //still stupidly high
         
@@ -77,6 +81,7 @@ public class ConfigManager {
 			int time = safeParse(bs.toString(), 1);
 			if(m != null) burnLength.put(m, time);
 		}
+		Bukkit.getLogger().info("Loaded "+burnLength.size()+" burn times");
 		
 		//load ash info
 		Map<String, Object> ads = plugin.getConfig().getConfigurationSection("Ash Details").getValues(false);
@@ -91,28 +96,31 @@ public class ConfigManager {
 				ConfigurationSection cs = (ConfigurationSection) o;
 				String type = cs.getString("Type","block").strip().toLowerCase();
 				int type_int = 0;
-				if(type.equals("normal")) type_int = 1;
-				if(type.equals("particles")) type_int = 2;
-				if(type.equals("scorch")) type_int = 3;
+				if(type.startsWith("block")) type_int = 1;
+				if(type.startsWith("particle")) type_int = 2;
+				if(type.startsWith("scorch")) type_int = 3;
 				ad = new AshData(type_int, (float) cs.getDouble("Chance", 0.0));
 			}
+			if(ad == null) continue;
 			
 			//parse and apply key
-			if(key.strip().equalsIgnoreCase("default")) def = ad;
-			else if(key.strip().equalsIgnoreCase("passable")) pass = ad;
+			if(key.strip().toLowerCase().startsWith("default")) def = ad;
+			else if(key.strip().toLowerCase().startsWith("passable")) pass = ad;
 			else {
 				Material m = safeMatParse(key);
 				if(m != null) ashType.put(m, ad);
 			}
 		}
+		Bukkit.getLogger().info("Loaded "+ashType.size()+" explicit ash recipes");
 		
 		//apply ash defaults
 		for(Material m : Material.values()) {
 			if(ashType.containsKey(m)) continue;
 			
 			if(pass != null && m.isTransparent()) ashType.put(m, pass);
-			else if(def != null) ashType.put(m, pass);
+			else if(def != null) ashType.put(m, def);
 		}
+		Bukkit.getLogger().info("Loaded "+ashType.size()+" explicit+implicit ash recipes");
 		
 		//parse scorch recipes
 		Map<String, Object> sr = plugin.getConfig().getConfigurationSection("Scorch Recipes").getValues(false);
@@ -121,6 +129,7 @@ public class ConfigManager {
 			Material o = safeMatParse(sr.get(key).toString());
 			if(i != null && o != null) scorchRecipes.put(i, o);
 		}
+		Bukkit.getLogger().info("Loaded "+scorchRecipes.size()+" scorches");
 	}
 	
 	public static void saveAsh(List<Block> bl) {

@@ -32,13 +32,15 @@ public class FireListener  implements Listener {
 	
 	@EventHandler
 	public void blockLightedHandler(BlockIgniteEvent e) {
-		burningBlocks.put(e.getBlock(), ConfigManager.burnLength.getOrDefault(e.getBlock().getType(),1)-1);
+		if(ConfigManager.burnLength.getOrDefault(e.getBlock().getType(),1) > 1)
+			burningBlocks.put(e.getBlock(), ConfigManager.burnLength.getOrDefault(e.getBlock().getType(),1)-1);
 	}
 	
 	@EventHandler
 	public void blockPlaceEvent(BlockPlaceEvent e) { //special-case for when a player places fire
 		if(e.getBlock().getType() == Material.FIRE)
-			burningBlocks.put(e.getBlockAgainst(), ConfigManager.burnLength.getOrDefault(e.getBlockAgainst().getType(),1)-1);
+			if(ConfigManager.burnLength.getOrDefault(e.getBlockAgainst().getType(),1) > 1)
+				burningBlocks.put(e.getBlockAgainst(), ConfigManager.burnLength.getOrDefault(e.getBlockAgainst().getType(),1)-1);
 	}
 	
 	//if block is broken, remove it
@@ -71,7 +73,12 @@ public class FireListener  implements Listener {
 		}
 		
 		//set block to ash, to be tracked by the AshListener
+		Material org = e.getBlock().getType();
 		AshListener.createAsh(e.getBlock());
+		if(org != e.getBlock().getType()) {
+			e.setCancelled(true);
+			return;
+		}
 	}
 	
 	public static ItemStack getFurnaceRecipeResult(ItemStack in) {

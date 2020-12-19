@@ -12,7 +12,6 @@ import org.bukkit.entity.EntityType;
 import org.bukkit.entity.ExperienceOrb;
 import org.bukkit.entity.FallingBlock;
 import org.bukkit.event.EventHandler;
-import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockExplodeEvent;
@@ -55,6 +54,7 @@ public class AshListener  implements Listener {
 	public static void createAsh(Block bl) {
 		if(!ConfigManager.enableAsh) //if ash is not enabled, don't make it
 			return;
+		if(ConfigManager.ashType.getOrDefault(bl.getType(), null) == null) return;
 		
 		//Only create if chance matches
 		if(Math.random() > ConfigManager.ashType.get(bl.getType()).chance) 
@@ -64,12 +64,21 @@ public class AshListener  implements Listener {
 		if(type == 1) { //block
 			//only create ash if the class was properly initialized
 			if(ashBlocks != null) {
-				bl.setType(ConfigManager.ashMat);
+				bl.setType(ConfigManager.ashMat, true);
 				ashBlocks.add(bl);
 			}
 		}
 		else if (type == 2) { //particles
 			bl.getWorld().spawnParticle(Particle.SUSPENDED_DEPTH, bl.getLocation().add(0.5, 0.4, 0.5), 4, 0.4, 0.4, 0.4, 0.05);
+			//drop flint with 10% chance
+			if(Math.random() < ConfigManager.ashFlintchance)
+				bl.getWorld().dropItemNaturally(bl.getLocation().add(0.5,0.5,0.5), new ItemStack(Material.FLINT));
+			
+			//drop exp
+			while(Math.random() > ConfigManager.ashExpChance) {
+				ExperienceOrb o = (ExperienceOrb) bl.getWorld().spawnEntity(bl.getLocation().add(Math.random(),1.1,Math.random()), EntityType.EXPERIENCE_ORB);
+				o.setExperience((int)(Math.random()*4)+1);
+			}
 		}
 		else if (type == 3) { //scorch
 			Block below = bl.getLocation().add(0,-1,0).getBlock();
@@ -175,7 +184,7 @@ public class AshListener  implements Listener {
 		
 		//drop flint with 10% chance
 		if(Math.random() < ConfigManager.ashFlintchance)
-			b.getWorld().dropItemNaturally(b.getLocation(), new ItemStack(Material.FLINT));
+			b.getWorld().dropItemNaturally(b.getLocation().add(0.5, 0.5, 0.5), new ItemStack(Material.FLINT));
 		
 		//drop exp
 		while(Math.random() > ConfigManager.ashExpChance) {
